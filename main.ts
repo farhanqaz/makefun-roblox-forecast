@@ -4,11 +4,11 @@
 // earlier read; the next state is that game's rank in a later read (1..20) or
 // OUT (index 20, outside the top 20). Transitions come from every read pair
 // whose gap is 0.4..16 hours, smoothed and row-normalised. The matrix for a
-// horizon of h hours is P^x with x = min((h / medianGap)^0.18, 1.35), blended
+// horizon of h hours is P^x with x = min((h / medianGap)^0.3, 2.0), blended
 // linearly between integer powers. The forecast averages those matrices over
 // the 24 hourly horizons. Candidates are the games ranked 1..20 in the last
 // read, scored for places 1..10; each place's probabilities are scaled so they
-// sum to at most 0.95, leaving the rest as hedge for games not named.
+// sum to at most 0.85, leaving the rest as hedge for games not named.
 
 import { mkdirSync, readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -24,7 +24,7 @@ const ALPHA = 0.2;
 const DEFAULT_MEDIAN_GAP = 6.4;
 const MAX_MULTIPLICATIONS = 40;
 const MIN_P = 0.002;
-const PLACE_CAP = 0.95;
+const PLACE_CAP = 0.85;
 
 type Read = { at: number; top: number[]; rankOf: Map<number, number> };
 type Matrix = number[][];
@@ -104,7 +104,7 @@ function buildModel(reads: Read[]): { P: Matrix; medianGap: number } | null {
 }
 
 function horizonMatrix(P: Matrix, medianGap: number, h: number): Matrix {
-  const x = Math.min((h / medianGap) ** 0.18, 1.35);
+  const x = Math.min((h / medianGap) ** 0.3, 2.0);
   const floor = Math.floor(x);
   const frac = x - floor;
   const low = power(P, floor);
